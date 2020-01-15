@@ -1,0 +1,32 @@
+#VPC作成
+aws ec2 create-vpc --cidr-bock 10.123.0.0/16
+$vpcid = <VPCID>
+aws ec2 create-tags --resources $vpcid --tags Key=Name,Value=tech-kadai-vpc
+
+#SUBNET1作成
+aws ec2 create-subnet --vpc-id $vpcid --cidr-block 10.123.10.0/24 --availability-zone ap-northeast-1a
+aws ec2 describe-subnets --filters "Name=cidrBlock,Values=10.123.10.0/24"
+$subnetid1 = <SUBNET1ID>
+aws ec2 create-tags --resources $subnetid1 --tags Key=Name,Value=tech-kadai-public-subnet-1
+
+
+aws ec2 describe-route-tables
+$rtbid = <RTBID>
+aws ec2 associate-route-table --route-table-id $rtbid --subnet-id $subnetid1
+
+
+aws ec2 create-internet-gateway
+$igwid = <IGWID>
+aws ec2 attach-internet-gateway --internet-gateway-id $igwid --vpc-id $vpcid
+aws ec2 create-route --route-table-id $rtbid --destination-cidr-block 0.0.0.0/0 --gateway-id $igwid
+
+
+#SUBNET2作成
+aws ec2 create-subnet --vpc-id $vpcid --cidr-block 10.123.11.0/24 --availability-zone ap-northeast-1c
+aws ec2 describe-subnets --filters "Name=cidrBlock,Values=10.123.11.0/24"
+$subnetid2 = <SUBNET2ID>
+aws ec2 create-tags --resources $subnetid2 --tags Key=Name,Value=tech-kadai-public-subnet-2
+
+
+aws ec2 associate-route-table --route-table-id $rtbid --subnet-id $subnetid2
+
