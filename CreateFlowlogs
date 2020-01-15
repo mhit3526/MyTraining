@@ -1,0 +1,18 @@
+# Get account id
+$aid = aws sts get-caller-identity --query 'Account' --output text
+
+# Create IAM role
+aws iam create-role --role-name publishFlowLogs --assume-role-policy-document file://vpcflowlogs-assume-role-trust-policy.json
+
+# Create IAM Policy
+aws iam create-policy --policy-name vpcflowlogs-policy --policy-document file://vpcflowlogs-role-trust-policy.json
+
+# Policy attach with role
+$policyarn = "arn:aws:iam::${aid}:policy/vpcflowlogs-policy"
+aws iam attach-role-policy --policy-arn $policyarn --role-name publishFlowLogs
+
+# Get VPC-ID
+$vpcid = aws ec2 describe-vpcs --filters "Name=cidr,Values=10.123.0.0/16" --query 'Vpcs[].VpcId[]' --output text
+
+# Create VPC-Flowlogs
+aws ec2 create-flow-logs --resource-type VPC --resource-ids $vpcid --traffic-type ACCEPT --log-group-name my-flow-logs --deliver-logs-permission-arn arn:aws:iam::${aid}/publishFlowLogs
