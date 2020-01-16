@@ -1,0 +1,29 @@
+# Create Key-pair
+aws ec2 create-key-pair --key-name MyTraining_EC2_Linux --query 'KeyMaterial' --output text > MyTraining_EC2_Linux.pem
+aws ec2 describe-key-pair
+$keyname = "MyTraining_EC2_Linux"
+
+# Get Vpc-id,Subnet-id
+$vpcid = aws ec2 describe-vpcs --filters Name=cidr,Values=10.123.0.0/16 --query 'Vpcs[].VpcId' --output text
+$subnetid = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.10.0/24" --query 'Subnets[].SubnetId' --output text
+
+# Create Security-Group(SG)
+aws ec2 create-security-group --group-name SG_MyTraining_EC2Linux --description "Security Group for MyTraining Create_EC2_Linux" --vpc-id ${vpcid}
+$sgid = aws ec2 describe-security-groups --filters Name=group-name,Values=SG_MyTraining_EC2Linux --query 'SecurityGroups[].GroupId' --output text
+
+# Configure SG
+aws ec2 authorize-security-group-ingress --group-id ${sgid} --protocol tcp --port 22 --cidr <IPAddresses>
+
+# Check SG-config
+aws ec2 describe-security-groups --filters Name=group-id,Values=${sgid} --query 'SecurityGroups[].IpPermissions[]' --output table
+
+# Create EC2(AmazonLinux2)
+aws ec2 run-instances --image-id ami-011facbea5ec0363b --count 1 --instance-type t3a.nano --key-name ${keyname} `
+    --security-group-ids ${sgid} --subnet-id ${subnetid} --tag-specifications 'ResourceType=instance,Tags=[{Key=tag1,Value=SLXTR01}]'
+
+# Check EC2-config
+aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=SLXTR01" --output table
+$ec2id = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=SLXTR01" --query 'Reservations[].Instances[].InstanceId'--output text
+$gip = 
+
+# Login to EC2
