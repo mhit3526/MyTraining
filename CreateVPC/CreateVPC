@@ -29,4 +29,3 @@ aws ec2 create-tags --resources $subnetid2 --tags Key=Name,Value=tech-kadai-publ
 
 
 aws ec2 associate-route-table --route-table-id $rtbid --subnet-id $subnetid2
-
