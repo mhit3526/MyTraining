@@ -1,0 +1,10 @@
+# EIP assign
+aws ec2 alocate-address --domain vpc
+$eipid = aws ec2 describe-addresses --query 'Addresses[].AllocationId' --output text
+$subnet1id = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.10.0/24" --query 'Subnets[].SubnetId' --output text
+$subnet2id = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.11.0/24" --query 'Subnets[].SubnetId' --output text
+
+# Create NatGateway
+aws ec2 create-nat-gateway --subnet-id ${subnet1id} --allocation-id ${eipid}
+$ngwid = aws ec2 describe-nat-gateways --query 'NatGateways[].NatGatewayId' --output text
+aws ec2 create-tags --resources $ngwid --tags Key=Name,Value=tech-kadai-nat-gateway
