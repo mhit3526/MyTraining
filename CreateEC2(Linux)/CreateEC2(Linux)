@@ -1,8 +1,15 @@
 # Create Key-pair
-aws ec2 create-key-pair --key-name MyTraining_EC2_Linux --query 'KeyMaterial' --output text > MyTraining_EC2_Linux.pem
-aws ec2 describe-key-pair
-$keyname = "MyTraining_EC2_Linux"
-$keyfile = ${keyname}.pem
+$keypath = "C:\work\ssh\"
+$keyname = "MyTraining_EC2_Linux5"
+$keyfile = "${keypath}${keyname}.pem"
+aws ec2 create-key-pair --key-name MyTraining_EC2_Linux5 --query 'KeyMaterial' --output text | Out-File("${keypath}{0}.pem" -f "${keyname}") -Encoding ascii
+aws ec2 describe-key-pairs
+
+# Configure Permission
+$i = whoami
+icacls ${keyfile}
+icacls ${keyfile} /inheritance:r /grant ${i}:F
+icacls ${keyfile}
 
 # Get Vpc-id,Subnet-id
 $vpcid = aws ec2 describe-vpcs --filters Name=cidr,Values=10.123.0.0/16 --query 'Vpcs[].VpcId' --output text
@@ -19,22 +26,37 @@ $sgid = aws ec2 describe-security-groups --filters Name=group-name,Values=SG_MyT
     --output text
 
 # Configure SG
-aws ec2 authorize-security-group-ingress --group-id ${sgid} --protocol tcp --port 22 --cidr <IPAddresses>
+aws ec2 authorize-security-group-ingress --group-id ${sgid} --protocol tcp --port 22 --cidr <IPAddress>
 
 # Check SG-config
 aws ec2 describe-security-groups --filters Name=group-id,Values=${sgid} --query 'SecurityGroups[].IpPermissions[]' --output table
 
 # Create EC2(AmazonLinux2)
 aws ec2 run-instances --image-id ami-011facbea5ec0363b --count 1 --instance-type t3a.nano --key-name ${keyname} `
-    --security-group-ids ${sgid} --subnet-id ${subnetid} --tag-specifications 'ResourceType=instance,Tags=[{Key=tag1,Value=SLXTR02}]'
+    --security-group-ids ${sgid} --subnet-id ${subnetid} --tag-specifications 'ResourceType=instance,Tags=[{Key=tag1,Value=tech-kadai-linux5}]'
 
 # Check EC2-config
-aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=SLXTR02" --output table
-$ec2id = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=SLXTR01" `
-    --query 'Reservations[].Instances[].InstanceId'--output text
-$gip = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=SLXTR02" `
+aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" --output table
+$ec2id = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
+    --query 'Reservations[].In  stances[].InstanceId'--output text
+$gip = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
     --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
 
-
 # Login to EC2
-ssh -i ${keyfile} -l ec2-user ${gip}
+ssh -i ${keyfile} ec2-user@${gip}
+
+# change SrvName
+sudo hostnamectl set-hostname tech-kadai-linux.localdomain
+sudo vi /etc/hosts
+    > 127.0.0.1 tech-kadai-linux.localdomain tech-kadai-linux localhost4 localhost4.localdomain4
+sudo reboot
+
+# Add user
+sudo adduser kadai-user
+
+# Add keyfile
+mkdir .ssh
+chmod 700 .ssh
+touch .ssh/authorized_keys
+chmod 600 .ssh/authorized_keys
+sudo vi .ssh/authorized_keys
