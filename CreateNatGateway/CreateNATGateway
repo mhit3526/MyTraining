@@ -2,9 +2,21 @@
 aws ec2 alocate-address --domain vpc
 $eipid = aws ec2 describe-addresses --query 'Addresses[].AllocationId' --output text
 $subnet1id = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.10.0/24" --query 'Subnets[].SubnetId' --output text
-$subnet2id = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.11.0/24" --query 'Subnets[].SubnetId' --output text
 
 # Create NatGateway
 aws ec2 create-nat-gateway --subnet-id ${subnet1id} --allocation-id ${eipid}
 $ngwid = aws ec2 describe-nat-gateways --query 'NatGateways[].NatGatewayId' --output text
 aws ec2 create-tags --resources $ngwid --tags Key=Name,Value=tech-kadai-nat-gateway
+
+# Create Private Subnet
+aws ec2 create-subnet --vpc-id ${vpcid} --cidr-block 10.123.20.0/24 --availability-zone ap-northeast-1c
+$privsubnet1id = aws ec2 describe-subnets --filters "Name=cidrBlock,Values=10.123.20.0/24" --query 'Subnets[].SubnetId' --output text
+aws ec2 create-tags --resources $subnetid1 --tags Key=Name,Value=tech-kadai-private-subnet-1
+
+# Create Route Table
+aws ec2 create-route-table --vpc-id $vpcid
+$rtb1id = <RTBID>
+
+# Configure Route Table
+aws ec2 create-route --route-table-id ${rtb1id} --destination-cidr-block 0.0.0.0/0 --nat-gateway-id ${ngwid} 
+aws ec2 associate-route-table --route-table-id $rtb1id --subnet-id $privsubnet1id
