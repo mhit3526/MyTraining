@@ -1,0 +1,28 @@
+# Set Key-pair
+$keypath = "C:\work\ssh\"
+$keyname = "MyTraining_EC2_Linux5"
+$keyfile = "${keypath}${keyname}.pem"
+
+# Get Vpc-id,Subnet-id
+$vpcid = aws ec2 describe-vpcs --filters Name=cidr,Values=10.123.0.0/16 --query 'Vpcs[].VpcId' --output text
+$privsubnet1id = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.20.0/24" --query 'Subnets[].SubnetId' --output text
+
+# Create Security-Group(SG)
+aws ec2 create-security-group --group-name SG_MyTraining_EC2_Windows --description "Security Group for MyTraining Create_EC2_Windows" `
+    --vpc-id ${vpcid}
+$sgid = aws ec2 describe-security-groups --filters Name=group-name,Values=SG_MyTraining_EC2_Windows --query 'SecurityGroups[].GroupId' `
+    --output text
+
+# Configure SG
+aws ec2 authorize-security-group-ingress --group-id ${sgid} --protocol tcp --port 3389 --cidr 10.123.0.0/16
+
+# Create EC2(SWX Windows)
+aws ec2 describe-images --filter Name="owner-alias",Values="Wasabi-Chan" --filter Name="name",Values="amzn-ami-vpc-nat*"
+
+aws ec2 run-instances --image-id ami-01a70ac6043af585b --count 1 --instance-type t3a.medium --key-name ${keyname} `
+    --security-group-ids ${sgid} --subnet-id ${privsubnet1id} --tag-specifications 'ResourceType=instance,Tags=[{Key=tag1,Value=tech-kadai-windows}]'
+
+# Check EC2-config
+aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-windows" --output table
+
+

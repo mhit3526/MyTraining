@@ -28,6 +28,8 @@ $keypath = "C:\work\ssh\"
 $keyname = "MyTraining_EC2_Linux5"
 $keyfile = "${keypath}${keyname}.pem"
 
+aws ec2 describe-images --filter Name="owner-alias",Values="amazon" --filter Name="name",Values="amzn-ami-vpc-nat*" 
+
 aws ec2 run-instances --image-id ami-00d29e4cb217ae06b --count 1 --instance-type t2.nano --key-name ${keyname} --security-group-ids `
     ${sgid} --subnet-id ${subnet2id} --tag-specifications 'ResourceType=instance,Tags=[{Key=tag1,Value=tech-kadai-NAT-instance}]'
 $iid = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-NAT-instance" `
