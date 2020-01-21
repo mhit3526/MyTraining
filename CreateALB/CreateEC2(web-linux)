@@ -1,0 +1,41 @@
+# Create Key-pair
+c$keypath = "C:\work\ssh\test\"
+$keyname = "test"
+$keyfile = "${keypath}${keyname}.pem"
+
+# Get Vpc-id,Subnet-id
+$vpcid = aws ec2 describe-vpcs --filters Name=cidr,Values=10.123.0.0/16 --query 'Vpcs[].VpcId' --output text
+$privsubnet1id = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.20.0/24" --query 'Subnets[].SubnetId' --output text
+$privsubnet2id = aws ec2 describe-subnets --filters "Name=cidr,Values=10.123.21.0/24" --query 'Subnets[].SubnetId' --output text
+
+# Create EC2(AmazonLinux2)
+aws ec2 run-instances --image-id ami-011facbea5ec0363b --count 1 --instance-type t3a.nano --key-name ${keyname} `
+    --subnet-id ${privsubnet1id} --tag-specifications 'ResourceType=instance,Tags=[{Key=name,Value=tech-kadai-web01}]'
+aws ec2 run-instances --image-id ami-011facbea5ec0363b --count 1 --instance-type t3.nano --key-name ${keyname} `
+    --subnet-id ${privsubnet2id} --tag-specifications 'ResourceType=instance,Tags=[{Key=name,Value=tech-kadai-web02}]'
+
+# Check EC2-config(web01)
+aws ec2 describe-instances --filters "Name=tag-key,Values=name" "Name=tag-value,Values=tech-kadai-web01" --output table
+$web01id = aws ec2 describe-instances --filters "Name=tag-key,Values=name" "Name=tag-value,Values=tech-kadai-web01" `
+    --query 'Reservations[].Instances[].InstanceId'--output text
+$web01gip = aws ec2 describe-instances --filters "Name=tag-key,Values=name" "Name=tag-value,Values=tech-kadai-web01" `
+    --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
+
+# Check EC2-config(web02)
+aws ec2 describe-instances --filters "Name=tag-key,Values=name" "Name=tag-value,Values=tech-kadai-web02" --output table
+$web02id = aws ec2 describe-instances --filters "Name=tag-key,Values=name" "Name=tag-value,Values=tech-kadai-web02" `
+    --query 'Reservations[].Instances[].InstanceId'--output text
+$web02gip = aws ec2 describe-instances --filters "Name=tag-key,Values=name" "Name=tag-value,Values=tech-kadai-web02" `
+    --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
+
+# Login to EC2
+$gip = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
+    --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
+ssh -i ${keyfile} ec2-user@${gip}
+
+# change SrvName
+sudo hostnamectl set-hostname tech-kadai-linux.localdomain
+sudo vi /etc/hosts
+    > 127.0.0.1 tech-kadai-linux.localdomain tech-kadai-linux localhost4 localhost4.localdomain4
+sudo reboot
+

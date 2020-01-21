@@ -1,8 +1,8 @@
 # Create Key-pair
-$keypath = "C:\work\ssh\"
-$keyname = "MyTraining_EC2_Linux5"
+c$keypath = "C:\work\ssh\test\"
+$keyname = "test"
 $keyfile = "${keypath}${keyname}.pem"
-aws ec2 create-key-pair --key-name MyTraining_EC2_Linux5 --query 'KeyMaterial' --output text | Out-File("${keypath}{0}.pem" -f "${keyname}") -Encoding ascii
+aws ec2 create-key-pair --key-name MyTraining_EC2_Linux6 --query 'KeyMaterial' --output text | Out-File("${keypath}{0}.pem" -f "${keyname}") -Encoding ascii
 aws ec2 describe-key-pairs
 
 # Configure Permission
@@ -38,7 +38,7 @@ aws ec2 run-instances --image-id ami-011facbea5ec0363b --count 1 --instance-type
 # Check EC2-config
 aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" --output table
 $ec2id = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
-    --query 'Reservations[].In  stances[].InstanceId'--output text
+    --query 'Reservations[].Instances[].InstanceId'--output text
 $gip = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
     --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
 

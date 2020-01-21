@@ -1,6 +1,6 @@
 # Set Key-pair
 $keypath = "C:\work\ssh\"
-$keyname = "MyTraining_EC2_Linux5"
+$keyname = "MyTraining_EC2_Linux6"
 $keyfile = "${keypath}${keyname}.pem"
 
 # Get Vpc-id,Subnet-id
@@ -31,4 +31,3 @@ $winpip =  aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name
 $bstgip = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
     --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
 ssh -L 13389:${winpip}:3389 -i $keyfile ec2-user@$bstip
-
