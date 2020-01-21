@@ -24,5 +24,11 @@ aws ec2 run-instances --image-id ami-01a70ac6043af585b --count 1 --instance-type
 
 # Check EC2-config
 aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-windows" --output table
+$winpip =  aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-windows" `
+    --query 'Reservations[].Instances[].PrivateIpAddress' --output text
 
+# Configure SSH Port Forward
+$bstgip = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
+    --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
+ssh -L 13389:${winpip}:3389 -i $keyfile ec2-user@$bstip
 
