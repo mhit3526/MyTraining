@@ -1,5 +1,5 @@
 # Create Key-pair
-c$keypath = "C:\work\ssh\test\"
+$keypath = "C:\work\ssh\test\"
 $keyname = "test"
 $keyfile = "${keypath}${keyname}.pem"
 aws ec2 create-key-pair --key-name MyTraining_EC2_Linux6 --query 'KeyMaterial' --output text | Out-File("${keypath}{0}.pem" -f "${keyname}") -Encoding ascii

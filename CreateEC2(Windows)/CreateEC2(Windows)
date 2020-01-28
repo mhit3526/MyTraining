@@ -1,7 +1,10 @@
 # Set Key-pair
-$keypath = "C:\work\ssh\"
-$keyname = "MyTraining_EC2_Linux6"
+$keypath = "C:\work\ssh\test\"
+$keyname = "test"
 $keyfile = "${keypath}${keyname}.pem"
+$wkeypath = "C:\work\ssh\"
+$wkeyname = "MyTraining_EC2_Linux6"
+$wkeyfile = "${wkeypath}${wkeyname}.pem"
 
 # Get Vpc-id,Subnet-id
 $vpcid = aws ec2 describe-vpcs --filters Name=cidr,Values=10.123.0.0/16 --query 'Vpcs[].VpcId' --output text
@@ -19,7 +22,7 @@ aws ec2 authorize-security-group-ingress --group-id ${sgid} --protocol tcp --por
 # Create EC2(SWX Windows)
 aws ec2 describe-images --filter Name="owner-alias",Values="Wasabi-Chan" --filter Name="name",Values="amzn-ami-vpc-nat*"
 
-aws ec2 run-instances --image-id ami-01a70ac6043af585b --count 1 --instance-type t3a.medium --key-name ${keyname} `
+aws ec2 run-instances --image-id ami-01a70ac6043af585b --count 1 --instance-type t3a.medium --key-name ${wkeyname} `
     --security-group-ids ${sgid} --subnet-id ${privsubnet1id} --tag-specifications 'ResourceType=instance,Tags=[{Key=tag1,Value=tech-kadai-windows}]'
 
 # Check EC2-config
@@ -30,4 +33,4 @@ $winpip =  aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name
 # Configure SSH Port Forward
 $bstgip = aws ec2 describe-instances --filters "Name=tag-key,Values=tag1" "Name=tag-value,Values=tech-kadai-linux5" `
     --query 'Reservations[].Instances[].NetworkInterfaces[].Association[].PublicIp' --output text
-ssh -L 13389:${winpip}:3389 -i $keyfile ec2-user@$bstip
+ssh -L 13389:${winpip}:3389 -i $keyfile ec2-user@$bstgip

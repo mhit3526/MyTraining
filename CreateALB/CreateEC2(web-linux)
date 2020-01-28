@@ -1,6 +1,6 @@
 # Create Key-pair
-c$keypath = "C:\work\ssh\test\"
-$keyname = "test"
+c$keypath = "C:\work\ssh\"
+$keyname = "MyTraining_EC2_Linux6"
 $keyfile = "${keypath}${keyname}.pem"
 
 # Get Vpc-id,Subnet-id
